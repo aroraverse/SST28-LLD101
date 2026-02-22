@@ -1,10 +1,12 @@
 import java.nio.charset.StandardCharsets;
 
 public class PdfExporter extends Exporter {
+    private static final int MAX_CONTENT_SIZE = 20;
+    
     @Override
     public ExportResult export(ExportRequest req) {
-        // LSP violation: tightens precondition arbitrarily
-        if (req.body != null && req.body.length() > 20) {
+        // Check size constraint - this is a delivery constraint, not part of base contract
+        if (req.body != null && req.body.length() > MAX_CONTENT_SIZE) {
             throw new IllegalArgumentException("PDF cannot handle content > 20 chars");
         }
         String fakePdf = "PDF(" + req.title + "):" + req.body;

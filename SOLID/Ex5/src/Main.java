@@ -16,7 +16,7 @@ public class Main {
         try {
             ExportResult out = e.export(r);
             return "OK bytes=" + out.bytes.length;
-        } catch (RuntimeException ex) {
+        } catch (Exception ex) {
             return "ERROR: " + ex.getMessage();
         }
     }
