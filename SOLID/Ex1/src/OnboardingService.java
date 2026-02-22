@@ -1,47 +1,76 @@
 import java.util.*;
 
+/**
+ * OnboardingService - Orchestrates the student registration workflow.
+ * 
+ * SOLID PRINCIPLE: Single Responsibility Principle (SRP)
+ * 
+ * Approach:
+ * - Delegates parsing, validation, persistence, and printing to specialized components
+ * - Acts as a workflow orchestrator that coordinates multiple responsibilities
+ * - Each dependency handles exactly one concern, making the service focused and testable
+ * 
+ * Time Complexity: O(n) where n is the length of the input string
+ * Space Complexity: O(n) for storing parsed fields and error messages
+ * 
+ * Benefits:
+ * - Easy to test each component independently
+ * - Adding new validation rules doesn't require modifying this class
+ * - Clear separation of concerns improves maintainability
+ */
 public class OnboardingService {
-    private final FakeDb db;
+    private final StudentStore store;
+    private final InputParser parser;
+    private final StudentValidator validator;
+    private final ConfirmationPrinter printer;
 
-    public OnboardingService(FakeDb db) { this.db = db; }
+    public OnboardingService(StudentStore store, InputParser parser, StudentValidator validator, ConfirmationPrinter printer) {
+        this.store = store;
+        this.parser = parser;
+        this.validator = validator;
+        this.printer = printer;
+    }
 
-    // Intentionally violates SRP: parses + validates + creates ID + saves + prints.
+    /**
+     * Registers a student from raw input string.
+     * 
+     * Process:
+     * 1. Parse the raw input into key-value pairs
+     * 2. Extract student details
+     * 3. Validate all fields
+     * 4. Generate unique ID
+     * 5. Store the record
+     * 6. Print confirmation
+     * 
+     * @param raw Input string in format: field1=value1;field2=value2;...
+     */
     public void registerFromRawInput(String raw) {
         System.out.println("INPUT: " + raw);
 
-        Map<String,String> kv = new LinkedHashMap<>();
-        String[] parts = raw.split(";");
-        for (String p : parts) {
-            String[] t = p.split("=", 2);
-            if (t.length == 2) kv.put(t[0].trim(), t[1].trim());
-        }
+        Map<String, String> kv = parser.parse(raw);
 
         String name = kv.getOrDefault("name", "");
         String email = kv.getOrDefault("email", "");
         String phone = kv.getOrDefault("phone", "");
         String program = kv.getOrDefault("program", "");
 
-        // validation inline, printing inline
-        List<String> errors = new ArrayList<>();
-        if (name.isBlank()) errors.add("name is required");
-        if (email.isBlank() || !email.contains("@")) errors.add("email is invalid");
-        if (phone.isBlank() || !phone.chars().allMatch(Character::isDigit)) errors.add("phone is invalid");
-        if (!(program.equals("CSE") || program.equals("AI") || program.equals("SWE"))) errors.add("program is invalid");
+        List<String> errors = validator.validate(name, email, phone, program);
 
         if (!errors.isEmpty()) {
             System.out.println("ERROR: cannot register");
-            for (String e : errors) System.out.println("- " + e);
+            for (String e : errors) {
+                System.out.println("- " + e);
+            }
             return;
         }
 
-        String id = IdUtil.nextStudentId(db.count());
+        String id = IdUtil.nextStudentId(store.count());
         StudentRecord rec = new StudentRecord(id, name, email, phone, program);
 
-        db.save(rec);
+        store.save(rec);
 
         System.out.println("OK: created student " + id);
-        System.out.println("Saved. Total students: " + db.count());
-        System.out.println("CONFIRMATION:");
-        System.out.println(rec);
+        System.out.println("Saved. Total students: " + store.count());
+        printer.printConfirmation(rec);
     }
 }
