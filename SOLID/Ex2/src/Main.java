@@ -4,7 +4,16 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("=== Cafeteria Billing ===");
 
-        CafeteriaSystem sys = new CafeteriaSystem();
+        Map<String, MenuItem> menu = new LinkedHashMap<>();
+        menu.put("M1", new MenuItem("M1", "Veg Thali", 80.00));
+        menu.put("C1", new MenuItem("C1", "Coffee", 30.00));
+        menu.put("S1", new MenuItem("S1", "Sandwich", 60.00));
+
+        InvoiceStore store = new FileStore();
+        InvoiceCalculator calculator = new InvoiceCalculator(menu);
+        InvoicePrinter printer = new InvoicePrinter(menu);
+        
+        CafeteriaSystem sys = new CafeteriaSystem(store, calculator, printer);
         sys.addToMenu(new MenuItem("M1", "Veg Thali", 80.00));
         sys.addToMenu(new MenuItem("C1", "Coffee", 30.00));
         sys.addToMenu(new MenuItem("S1", "Sandwich", 60.00));
