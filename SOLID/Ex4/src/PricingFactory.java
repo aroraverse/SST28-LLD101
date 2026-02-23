@@ -1,4 +1,5 @@
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PricingFactory {
     private static final Map<Integer, RoomPricingStrategy> roomPricingMap = new HashMap<>();

@@ -1,4 +1,4 @@
-import java.util.*;
+import java.util.List;
 
 public class BookingRequest {
     public final int roomType;
